@@ -11,7 +11,7 @@ Aplicación web desarrollada con React, TypeScript y Vite para la gestión de la
 - Photos
 - Todos
 
-La aplicación consume la API REST desarrollada en Helidon 4.5 mediante Axios y utiliza Redux Toolkit para la gestión del estado global.
+La aplicación consume la API REST desarrollada en Helidon 4.5 mediante Axios y utiliza Redux Toolkit para la administración del estado global.
 
 ---
 
@@ -19,13 +19,17 @@ La aplicación consume la API REST desarrollada en Helidon 4.5 mediante Axios y 
 
 | Tecnología | Versión |
 |------------|----------|
-| React | COMPLETAR |
-| TypeScript | COMPLETAR |
-| Vite | COMPLETAR |
-| React Router DOM | COMPLETAR |
-| Redux Toolkit | COMPLETAR |
-| Axios | COMPLETAR |
-| Material UI | COMPLETAR |
+| React | 19.2.7 |
+| React DOM | 19.2.7 |
+| TypeScript | 6.0.2 |
+| Vite | 8.1.1 |
+| React Router DOM | 7.18.1 |
+| Redux Toolkit | 2.12.0 |
+| React Redux | 9.3.0 |
+| Axios | 1.18.1 |
+| Material UI | 9.2.0 |
+| Emotion React | 11.14.0 |
+| Emotion Styled | 11.14.1 |
 
 ---
 
@@ -134,13 +138,22 @@ usersSlice
 
 ```
 
+Cada slice administra:
+
+- Estado global
+- Acciones
+- Async Thunks
+- Consumo de API
+- Manejo de carga
+- Actualización de datos
+
 ---
 
 # Navegación
 
-Se implementó React Router para la navegación entre páginas.
+La aplicación utiliza React Router DOM.
 
-Rutas configuradas:
+Rutas implementadas:
 
 ```text
 /
@@ -158,7 +171,7 @@ Gestión de usuarios.
 /posts
 ```
 
-Gestión de posts.
+Gestión de publicaciones.
 
 ```text
 /comments
@@ -188,30 +201,49 @@ Gestión de tareas.
 
 # Comunicación con el Backend
 
-La aplicación utiliza Axios para consumir la API REST.
+La aplicación consume los servicios REST mediante Axios.
 
-Archivo:
+Archivo de configuración:
 
 ```text
-src/api/api.ts
+src/api/api.tsx
 ```
 
 Configuración:
 
 ```typescript
+import axios from "axios";
+
 const api = axios.create({
     baseURL: "/api",
 });
+
+export default api;
 ```
 
 ---
 
-# Proxy de Desarrollo
+# Configuración Proxy Vite
 
-Configurado en:
+La aplicación utiliza un proxy para comunicarse con el backend Helidon.
+
+Archivo:
 
 ```text
 vite.config.ts
+```
+
+Configuración:
+
+```typescript
+server: {
+    proxy: {
+        "/api": {
+            target: "http://localhost:8080",
+            changeOrigin: true,
+        },
+    },
+}
 ```
 
 Redirección:
@@ -221,8 +253,6 @@ Redirección:
       ↓
 http://localhost:8080
 ```
-
-Permite consumir la API Helidon sin problemas de CORS durante el desarrollo.
 
 ---
 
@@ -248,32 +278,28 @@ PostgreSQL
 
 # Interfaz de Usuario
 
-La interfaz se desarrolló utilizando Material UI.
+Se desarrolló utilizando Material UI.
 
-Componentes principales:
+Componentes utilizados:
 
-```text
-AppBar
-Toolbar
-Button
-Dialog
-TextField
-Table
-Paper
-Snackbar
-CircularProgress
-```
-
-Características:
-
-```text
-- Navegación superior
-- Formularios modales
-- Tablas de datos
-- Validaciones visuales
-- Notificaciones Snackbar
-- Indicadores de carga
-```
+- AppBar
+- Toolbar
+- Button
+- Dialog
+- DialogTitle
+- DialogContent
+- DialogActions
+- TextField
+- Table
+- TableHead
+- TableBody
+- TableRow
+- TableCell
+- Paper
+- Snackbar
+- CircularProgress
+- Container
+- Typography
 
 ---
 
@@ -283,26 +309,32 @@ Características:
 
 Validación de:
 
-```text
-Nombre obligatorio
-Usuario obligatorio
-Email obligatorio
-Formato correcto de email
-```
+- Nombre obligatorio
+- Usuario obligatorio
+- Email obligatorio
+- Formato válido de email
 
 Mensajes mostrados mediante Snackbar.
 
 ---
 
-# Manejo de Errores
+# Manejo de Notificaciones
 
-La aplicación captura errores provenientes del backend y muestra mensajes amigables al usuario mediante Snackbar.
+La aplicación utiliza el componente:
 
-Ejemplo:
+```text
+AppSnackbar
+```
+
+para mostrar mensajes de éxito, advertencia e error.
+
+Ejemplos:
 
 ```text
 Usuario creado correctamente
 Usuario actualizado correctamente
+Usuario eliminado correctamente
+
 Error al crear usuario
 Error al eliminar usuario
 ```
@@ -311,7 +343,7 @@ Error al eliminar usuario
 
 # Integración con Backend Helidon
 
-La aplicación consume los siguientes endpoints:
+La aplicación consume los siguientes recursos REST:
 
 ```text
 /api/users
@@ -331,7 +363,7 @@ PUT
 DELETE
 ```
 
-Total:
+Total consumido:
 
 ```text
 30 endpoints REST
@@ -363,7 +395,7 @@ Modo desarrollo:
 npm run dev
 ```
 
-Servidor disponible en:
+Aplicación disponible en:
 
 ```text
 http://localhost:5173
@@ -373,27 +405,69 @@ http://localhost:5173
 
 # Requisitos
 
+- Node.js
+- npm
+- Backend Helidon ejecutándose en localhost:8080
+- PostgreSQL ejecutándose
+
+---
+
+# Orden Correcto de Arranque
+
+## 1. Iniciar PostgreSQL
+
+Verificar que la base de datos se encuentre disponible.
+
+## 2. Ejecutar Backend
+
+```bash
+cd backend
+
+gradlew run
+```
+
+Servidor:
+
 ```text
-Node.js
-npm
-Backend Helidon ejecutándose en localhost:8080
+http://localhost:8080
+```
+
+## 3. Ejecutar Frontend
+
+```bash
+
+npm install
+
+npm run dev
+```
+
+Aplicación:
+
+```text
+http://localhost:5173
 ```
 
 ---
 
-# Orden de Arranque
+# Estructura del Proyecto
 
-1. PostgreSQL
-2. Backend Helidon
+```text
+frontend-post
 
-```bash
-gradlew run
-```
-
-3. Frontend React
-
-```bash
-npm run dev
+├── public
+│
+├── src
+│   ├── api
+│   ├── app
+│   ├── components
+│   ├── features
+│   ├── pages
+│   └── routes
+│
+├── package.json
+├── vite.config.ts
+├── tsconfig.json
+└── README.md
 ```
 
 ---
