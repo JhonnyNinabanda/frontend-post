@@ -14,17 +14,40 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField
+    TextField,
+    CircularProgress,
+    Box
 } from "@mui/material";
 
 import api from "../api/api";
 
 import type { Album } from "../features/albums/albumTypes";
 
+import {
+    fetchAlbums
+} from "../features/albums/albumsSlice";
+
+import {
+    useAppDispatch,
+    useAppSelector
+} from "../app/hooks";
+
+import AppSnackbar from "../components/AppSnackbar";
+
 function AlbumsPage() {
 
-    const [albums, setAlbums] =
-        useState<Album[]>([]);
+    const dispatch =
+        useAppDispatch();
+
+    const albums =
+        useAppSelector(
+            state => state.albums.albums
+        );
+
+    const loading =
+        useAppSelector(
+            state => state.albums.loading
+        );
 
     const [open, setOpen] =
         useState(false);
@@ -41,28 +64,44 @@ function AlbumsPage() {
     const [title, setTitle] =
         useState("");
 
-    useEffect(() => {
+    const [snackbarOpen, setSnackbarOpen] =
+        useState(false);
 
-        loadAlbums();
+    const [snackbarMessage, setSnackbarMessage] =
+        useState("");
 
-    }, []);
+    const [snackbarSeverity, setSnackbarSeverity] =
+        useState<
+            "success"
+            | "error"
+            | "warning"
+            | "info"
+        >("success");
 
-    async function loadAlbums() {
+    function showSnackbar(
+        message: string,
+        severity:
+            | "success"
+            | "error"
+            | "warning"
+            | "info"
+    ) {
 
-        try {
+        setSnackbarMessage(message);
 
-            const response =
-                await api.get("/albums");
+        setSnackbarSeverity(severity);
 
-            setAlbums(response.data);
-
-        } catch (error) {
-
-            console.error(error);
-
-        }
+        setSnackbarOpen(true);
 
     }
+
+    useEffect(() => {
+
+        dispatch(
+            fetchAlbums()
+        );
+
+    }, [dispatch]);
 
     async function saveAlbum() {
 
@@ -77,13 +116,25 @@ function AlbumsPage() {
                 }
             );
 
-            await loadAlbums();
+            await dispatch(
+                fetchAlbums()
+            );
+
+            showSnackbar(
+                "Álbum creado correctamente",
+                "success"
+            );
 
             closeDialog();
 
         } catch (error) {
 
             console.error(error);
+
+            showSnackbar(
+                "Error al crear álbum",
+                "error"
+            );
 
         }
 
@@ -102,13 +153,25 @@ function AlbumsPage() {
                 }
             );
 
-            await loadAlbums();
+            await dispatch(
+                fetchAlbums()
+            );
+
+            showSnackbar(
+                "Álbum actualizado correctamente",
+                "success"
+            );
 
             closeDialog();
 
         } catch (error) {
 
             console.error(error);
+
+            showSnackbar(
+                "Error al actualizar álbum",
+                "error"
+            );
 
         }
 
@@ -135,11 +198,23 @@ function AlbumsPage() {
                 `/albums/${id}`
             );
 
-            await loadAlbums();
+            await dispatch(
+                fetchAlbums()
+            );
+
+            showSnackbar(
+                "Álbum eliminado correctamente",
+                "success"
+            );
 
         } catch (error) {
 
             console.error(error);
+
+            showSnackbar(
+                "Error al eliminar álbum",
+                "error"
+            );
 
         }
 
@@ -214,84 +289,102 @@ function AlbumsPage() {
                 Nuevo Álbum
             </Button>
 
-            <Paper>
+            {loading ? (
 
-                <Table>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mt: 4
+                    }}
+                >
 
-                    <TableHead>
+                    <CircularProgress />
 
-                        <TableRow>
+                </Box>
 
-                            <TableCell>ID</TableCell>
+            ) : (
 
-                            <TableCell>User ID</TableCell>
+                <Paper>
 
-                            <TableCell>Título</TableCell>
+                    <Table>
 
-                            <TableCell>Acciones</TableCell>
+                        <TableHead>
 
-                        </TableRow>
+                            <TableRow>
 
-                    </TableHead>
+                                <TableCell>ID</TableCell>
 
-                    <TableBody>
+                                <TableCell>User ID</TableCell>
 
-                        {albums.map(album => (
+                                <TableCell>Título</TableCell>
 
-                            <TableRow
-                                key={album.id}
-                            >
-
-                                <TableCell>
-                                    {album.id}
-                                </TableCell>
-
-                                <TableCell>
-                                    {album.userId}
-                                </TableCell>
-
-                                <TableCell>
-                                    {album.title}
-                                </TableCell>
-
-                                <TableCell>
-
-                                    <Button
-                                        variant="contained"
-                                        color="warning"
-                                        size="small"
-                                        sx={{ mr: 1 }}
-                                        onClick={() =>
-                                            editAlbum(album)
-                                        }
-                                    >
-                                        Editar
-                                    </Button>
-
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        size="small"
-                                        onClick={() =>
-                                            deleteAlbum(
-                                                album.id
-                                            )
-                                        }
-                                    >
-                                        Eliminar
-                                    </Button>
-
-                                </TableCell>
+                                <TableCell>Acciones</TableCell>
 
                             </TableRow>
 
-                        ))}
+                        </TableHead>
 
-                    </TableBody>
+                        <TableBody>
 
-                </Table>
+                            {albums.map(album => (
 
-            </Paper>
+                                <TableRow
+                                    key={album.id}
+                                >
+
+                                    <TableCell>
+                                        {album.id}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {album.userId}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {album.title}
+                                    </TableCell>
+
+                                    <TableCell>
+
+                                        <Button
+                                            variant="contained"
+                                            color="warning"
+                                            size="small"
+                                            sx={{ mr: 1 }}
+                                            onClick={() =>
+                                                editAlbum(album)
+                                            }
+                                        >
+                                            Editar
+                                        </Button>
+
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            size="small"
+                                            onClick={() =>
+                                                deleteAlbum(
+                                                    album.id
+                                                )
+                                            }
+                                        >
+                                            Eliminar
+                                        </Button>
+
+                                    </TableCell>
+
+                                </TableRow>
+
+                            ))}
+
+                        </TableBody>
+
+                    </Table>
+
+                </Paper>
+
+            )}
 
             <Dialog
                 open={open}
@@ -371,6 +464,15 @@ function AlbumsPage() {
                 </DialogActions>
 
             </Dialog>
+
+            <AppSnackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={() =>
+                    setSnackbarOpen(false)
+                }
+            />
 
         </Container>
 

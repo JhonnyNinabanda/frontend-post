@@ -14,17 +14,38 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField
+    TextField,
+    CircularProgress,
+    Box
 } from "@mui/material";
 
 import api from "../api/api";
 
 import type { Post } from "../features/posts/postTypes";
 
+import {
+    fetchPosts
+} from "../features/posts/postsSlice";
+
+import {
+    useAppDispatch,
+    useAppSelector
+} from "../app/hooks";
+
 function PostsPage() {
 
-    const [posts, setPosts] =
-        useState<Post[]>([]);
+    const dispatch =
+        useAppDispatch();
+
+    const posts =
+        useAppSelector(
+            state => state.posts.posts
+        );
+
+    const loading =
+        useAppSelector(
+            state => state.posts.loading
+        );
 
     const [open, setOpen] =
         useState(false);
@@ -46,26 +67,11 @@ function PostsPage() {
 
     useEffect(() => {
 
-        loadPosts();
+        dispatch(
+            fetchPosts()
+        );
 
-    }, []);
-
-    async function loadPosts() {
-
-        try {
-
-            const response =
-                await api.get("/posts");
-
-            setPosts(response.data);
-
-        } catch (error) {
-
-            console.error(error);
-
-        }
-
-    }
+    }, [dispatch]);
 
     async function savePost() {
 
@@ -81,7 +87,9 @@ function PostsPage() {
                 }
             );
 
-            await loadPosts();
+            await dispatch(
+                fetchPosts()
+            );
 
             closeDialog();
 
@@ -107,7 +115,9 @@ function PostsPage() {
                 }
             );
 
-            await loadPosts();
+            await dispatch(
+                fetchPosts()
+            );
 
             closeDialog();
 
@@ -140,7 +150,9 @@ function PostsPage() {
                 `/posts/${id}`
             );
 
-            await loadPosts();
+            await dispatch(
+                fetchPosts()
+            );
 
         } catch (error) {
 
@@ -227,90 +239,108 @@ function PostsPage() {
                 Nuevo Post
             </Button>
 
-            <Paper>
+            {loading ? (
 
-                <Table>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mt: 4
+                    }}
+                >
 
-                    <TableHead>
+                    <CircularProgress />
 
-                        <TableRow>
+                </Box>
 
-                            <TableCell>ID</TableCell>
+            ) : (
 
-                            <TableCell>User ID</TableCell>
+                <Paper>
 
-                            <TableCell>Título</TableCell>
+                    <Table>
 
-                            <TableCell>Contenido</TableCell>
+                        <TableHead>
 
-                            <TableCell>Acciones</TableCell>
+                            <TableRow>
 
-                        </TableRow>
+                                <TableCell>ID</TableCell>
 
-                    </TableHead>
+                                <TableCell>User ID</TableCell>
 
-                    <TableBody>
+                                <TableCell>Título</TableCell>
 
-                        {posts.map(post => (
+                                <TableCell>Contenido</TableCell>
 
-                            <TableRow
-                                key={post.id}
-                            >
-
-                                <TableCell>
-                                    {post.id}
-                                </TableCell>
-
-                                <TableCell>
-                                    {post.userId}
-                                </TableCell>
-
-                                <TableCell>
-                                    {post.title}
-                                </TableCell>
-
-                                <TableCell>
-                                    {post.body}
-                                </TableCell>
-
-                                <TableCell>
-
-                                    <Button
-                                        variant="contained"
-                                        color="warning"
-                                        size="small"
-                                        sx={{ mr: 1 }}
-                                        onClick={() =>
-                                            editPost(post)
-                                        }
-                                    >
-                                        Editar
-                                    </Button>
-
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        size="small"
-                                        onClick={() =>
-                                            deletePost(
-                                                post.id
-                                            )
-                                        }
-                                    >
-                                        Eliminar
-                                    </Button>
-
-                                </TableCell>
+                                <TableCell>Acciones</TableCell>
 
                             </TableRow>
 
-                        ))}
+                        </TableHead>
 
-                    </TableBody>
+                        <TableBody>
 
-                </Table>
+                            {posts.map(post => (
 
-            </Paper>
+                                <TableRow
+                                    key={post.id}
+                                >
+
+                                    <TableCell>
+                                        {post.id}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {post.userId}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {post.title}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {post.body}
+                                    </TableCell>
+
+                                    <TableCell>
+
+                                        <Button
+                                            variant="contained"
+                                            color="warning"
+                                            size="small"
+                                            sx={{ mr: 1 }}
+                                            onClick={() =>
+                                                editPost(post)
+                                            }
+                                        >
+                                            Editar
+                                        </Button>
+
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            size="small"
+                                            onClick={() =>
+                                                deletePost(
+                                                    post.id
+                                                )
+                                            }
+                                        >
+                                            Eliminar
+                                        </Button>
+
+                                    </TableCell>
+
+                                </TableRow>
+
+                            ))}
+
+                        </TableBody>
+
+                    </Table>
+
+                </Paper>
+
+            )}
 
             <Dialog
                 open={open}

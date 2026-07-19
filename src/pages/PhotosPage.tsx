@@ -14,17 +14,40 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField
+    TextField,
+    CircularProgress,
+    Box
 } from "@mui/material";
 
 import api from "../api/api";
 
 import type { Photo } from "../features/photos/photoTypes";
 
+import {
+    fetchPhotos
+} from "../features/photos/photosSlice";
+
+import {
+    useAppDispatch,
+    useAppSelector
+} from "../app/hooks";
+
+import AppSnackbar from "../components/AppSnackbar";
+
 function PhotosPage() {
 
-    const [photos, setPhotos] =
-        useState<Photo[]>([]);
+    const dispatch =
+        useAppDispatch();
+
+    const photos =
+        useAppSelector(
+            state => state.photos.photos
+        );
+
+    const loading =
+        useAppSelector(
+            state => state.photos.loading
+        );
 
     const [open, setOpen] =
         useState(false);
@@ -47,28 +70,44 @@ function PhotosPage() {
     const [thumbnailUrl, setThumbnailUrl] =
         useState("");
 
-    useEffect(() => {
+    const [snackbarOpen, setSnackbarOpen] =
+        useState(false);
 
-        loadPhotos();
+    const [snackbarMessage, setSnackbarMessage] =
+        useState("");
 
-    }, []);
+    const [snackbarSeverity, setSnackbarSeverity] =
+        useState<
+            "success"
+            | "error"
+            | "warning"
+            | "info"
+        >("success");
 
-    async function loadPhotos() {
+    function showSnackbar(
+        message: string,
+        severity:
+            | "success"
+            | "error"
+            | "warning"
+            | "info"
+    ) {
 
-        try {
+        setSnackbarMessage(message);
 
-            const response =
-                await api.get("/photos");
+        setSnackbarSeverity(severity);
 
-            setPhotos(response.data);
-
-        } catch (error) {
-
-            console.error(error);
-
-        }
+        setSnackbarOpen(true);
 
     }
+
+    useEffect(() => {
+
+        dispatch(
+            fetchPhotos()
+        );
+
+    }, [dispatch]);
 
     async function savePhoto() {
 
@@ -85,13 +124,25 @@ function PhotosPage() {
                 }
             );
 
-            await loadPhotos();
+            await dispatch(
+                fetchPhotos()
+            );
+
+            showSnackbar(
+                "Foto creada correctamente",
+                "success"
+            );
 
             closeDialog();
 
         } catch (error) {
 
             console.error(error);
+
+            showSnackbar(
+                "Error al crear foto",
+                "error"
+            );
 
         }
 
@@ -112,13 +163,25 @@ function PhotosPage() {
                 }
             );
 
-            await loadPhotos();
+            await dispatch(
+                fetchPhotos()
+            );
+
+            showSnackbar(
+                "Foto actualizada correctamente",
+                "success"
+            );
 
             closeDialog();
 
         } catch (error) {
 
             console.error(error);
+
+            showSnackbar(
+                "Error al actualizar foto",
+                "error"
+            );
 
         }
 
@@ -145,11 +208,23 @@ function PhotosPage() {
                 `/photos/${id}`
             );
 
-            await loadPhotos();
+            await dispatch(
+                fetchPhotos()
+            );
+
+            showSnackbar(
+                "Foto eliminado correctamente",
+                "success"
+            );
 
         } catch (error) {
 
             console.error(error);
+
+            showSnackbar(
+                "Error al eliminar foto",
+                "error"
+            );
 
         }
 
@@ -240,96 +315,114 @@ function PhotosPage() {
                 Nueva Foto
             </Button>
 
-            <Paper>
+            {loading ? (
 
-                <Table>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mt: 4
+                    }}
+                >
 
-                    <TableHead>
+                    <CircularProgress />
 
-                        <TableRow>
+                </Box>
 
-                            <TableCell>ID</TableCell>
+            ) : (
 
-                            <TableCell>Album ID</TableCell>
+                <Paper>
 
-                            <TableCell>Título</TableCell>
+                    <Table>
 
-                            <TableCell>URL</TableCell>
+                        <TableHead>
 
-                            <TableCell>Thumbnail URL</TableCell>
+                            <TableRow>
 
-                            <TableCell>Acciones</TableCell>
+                                <TableCell>ID</TableCell>
 
-                        </TableRow>
+                                <TableCell>Album ID</TableCell>
 
-                    </TableHead>
+                                <TableCell>Título</TableCell>
 
-                    <TableBody>
+                                <TableCell>URL</TableCell>
 
-                        {photos.map(photo => (
+                                <TableCell>Thumbnail URL</TableCell>
 
-                            <TableRow
-                                key={photo.id}
-                            >
-
-                                <TableCell>
-                                    {photo.id}
-                                </TableCell>
-
-                                <TableCell>
-                                    {photo.albumId}
-                                </TableCell>
-
-                                <TableCell>
-                                    {photo.title}
-                                </TableCell>
-
-                                <TableCell>
-                                    {photo.url}
-                                </TableCell>
-
-                                <TableCell>
-                                    {photo.thumbnailUrl}
-                                </TableCell>
-
-                                <TableCell>
-
-                                    <Button
-                                        variant="contained"
-                                        color="warning"
-                                        size="small"
-                                        sx={{ mr: 1 }}
-                                        onClick={() =>
-                                            editPhoto(photo)
-                                        }
-                                    >
-                                        Editar
-                                    </Button>
-
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        size="small"
-                                        onClick={() =>
-                                            deletePhoto(
-                                                photo.id
-                                            )
-                                        }
-                                    >
-                                        Eliminar
-                                    </Button>
-
-                                </TableCell>
+                                <TableCell>Acciones</TableCell>
 
                             </TableRow>
 
-                        ))}
+                        </TableHead>
 
-                    </TableBody>
+                        <TableBody>
 
-                </Table>
+                            {photos.map(photo => (
 
-            </Paper>
+                                <TableRow
+                                    key={photo.id}
+                                >
+
+                                    <TableCell>
+                                        {photo.id}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {photo.albumId}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {photo.title}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {photo.url}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {photo.thumbnailUrl}
+                                    </TableCell>
+
+                                    <TableCell>
+
+                                        <Button
+                                            variant="contained"
+                                            color="warning"
+                                            size="small"
+                                            sx={{ mr: 1 }}
+                                            onClick={() =>
+                                                editPhoto(photo)
+                                            }
+                                        >
+                                            Editar
+                                        </Button>
+
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            size="small"
+                                            onClick={() =>
+                                                deletePhoto(
+                                                    photo.id
+                                                )
+                                            }
+                                        >
+                                            Eliminar
+                                        </Button>
+
+                                    </TableCell>
+
+                                </TableRow>
+
+                            ))}
+
+                        </TableBody>
+
+                    </Table>
+
+                </Paper>
+
+            )}
 
             <Dialog
                 open={open}
@@ -433,6 +526,15 @@ function PhotosPage() {
                 </DialogActions>
 
             </Dialog>
+
+            <AppSnackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={() =>
+                    setSnackbarOpen(false)
+                }
+            />
 
         </Container>
 

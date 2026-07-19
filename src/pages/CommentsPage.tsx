@@ -14,17 +14,40 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField
+    TextField,
+    CircularProgress,
+    Box
 } from "@mui/material";
 
 import api from "../api/api";
 
 import type { Comment } from "../features/comments/commentTypes";
 
+import {
+    fetchComments
+} from "../features/comments/commentsSlice";
+
+import {
+    useAppDispatch,
+    useAppSelector
+} from "../app/hooks";
+
+import AppSnackbar from "../components/AppSnackbar";
+
 function CommentsPage() {
 
-    const [comments, setComments] =
-        useState<Comment[]>([]);
+    const dispatch =
+        useAppDispatch();
+
+    const comments =
+        useAppSelector(
+            state => state.comments.comments
+        );
+
+    const loading =
+        useAppSelector(
+            state => state.comments.loading
+        );
 
     const [open, setOpen] =
         useState(false);
@@ -47,28 +70,44 @@ function CommentsPage() {
     const [body, setBody] =
         useState("");
 
-    useEffect(() => {
+    const [snackbarOpen, setSnackbarOpen] =
+        useState(false);
 
-        loadComments();
+    const [snackbarMessage, setSnackbarMessage] =
+        useState("");
 
-    }, []);
+    const [snackbarSeverity, setSnackbarSeverity] =
+        useState<
+            "success"
+            | "error"
+            | "warning"
+            | "info"
+        >("success");
 
-    async function loadComments() {
+    function showSnackbar(
+        message: string,
+        severity:
+            | "success"
+            | "error"
+            | "warning"
+            | "info"
+    ) {
 
-        try {
+        setSnackbarMessage(message);
 
-            const response =
-                await api.get("/comments");
+        setSnackbarSeverity(severity);
 
-            setComments(response.data);
-
-        } catch (error) {
-
-            console.error(error);
-
-        }
+        setSnackbarOpen(true);
 
     }
+
+    useEffect(() => {
+
+        dispatch(
+            fetchComments()
+        );
+
+    }, [dispatch]);
 
     async function saveComment() {
 
@@ -85,13 +124,25 @@ function CommentsPage() {
                 }
             );
 
-            await loadComments();
+            await dispatch(
+                fetchComments()
+            );
+
+            showSnackbar(
+                "Comentario creado correctamente",
+                "success"
+            );
 
             closeDialog();
 
         } catch (error) {
 
             console.error(error);
+
+            showSnackbar(
+                "Error al crear comentario",
+                "error"
+            );
 
         }
 
@@ -112,13 +163,25 @@ function CommentsPage() {
                 }
             );
 
-            await loadComments();
+            await dispatch(
+                fetchComments()
+            );
+
+            showSnackbar(
+                "Comentario actualizado correctamente",
+                "success"
+            );
 
             closeDialog();
 
         } catch (error) {
 
             console.error(error);
+
+            showSnackbar(
+                "Error al actualizar comentario",
+                "error"
+            );
 
         }
 
@@ -145,11 +208,23 @@ function CommentsPage() {
                 `/comments/${id}`
             );
 
-            await loadComments();
+            await dispatch(
+                fetchComments()
+            );
+
+            showSnackbar(
+                "Comentario eliminado correctamente",
+                "success"
+            );
 
         } catch (error) {
 
             console.error(error);
+
+            showSnackbar(
+                "Error al eliminar comentario",
+                "error"
+            );
 
         }
 
@@ -240,96 +315,114 @@ function CommentsPage() {
                 Nuevo Comentario
             </Button>
 
-            <Paper>
+            {loading ? (
 
-                <Table>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mt: 4
+                    }}
+                >
 
-                    <TableHead>
+                    <CircularProgress />
 
-                        <TableRow>
+                </Box>
 
-                            <TableCell>ID</TableCell>
+            ) : (
 
-                            <TableCell>Post ID</TableCell>
+                <Paper>
 
-                            <TableCell>Nombre</TableCell>
+                    <Table>
 
-                            <TableCell>Email</TableCell>
+                        <TableHead>
 
-                            <TableCell>Comentario</TableCell>
+                            <TableRow>
 
-                            <TableCell>Acciones</TableCell>
+                                <TableCell>ID</TableCell>
 
-                        </TableRow>
+                                <TableCell>Post ID</TableCell>
 
-                    </TableHead>
+                                <TableCell>Nombre</TableCell>
 
-                    <TableBody>
+                                <TableCell>Email</TableCell>
 
-                        {comments.map(comment => (
+                                <TableCell>Comentario</TableCell>
 
-                            <TableRow
-                                key={comment.id}
-                            >
-
-                                <TableCell>
-                                    {comment.id}
-                                </TableCell>
-
-                                <TableCell>
-                                    {comment.postId}
-                                </TableCell>
-
-                                <TableCell>
-                                    {comment.name}
-                                </TableCell>
-
-                                <TableCell>
-                                    {comment.email}
-                                </TableCell>
-
-                                <TableCell>
-                                    {comment.body}
-                                </TableCell>
-
-                                <TableCell>
-
-                                    <Button
-                                        variant="contained"
-                                        color="warning"
-                                        size="small"
-                                        sx={{ mr: 1 }}
-                                        onClick={() =>
-                                            editComment(comment)
-                                        }
-                                    >
-                                        Editar
-                                    </Button>
-
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        size="small"
-                                        onClick={() =>
-                                            deleteComment(
-                                                comment.id
-                                            )
-                                        }
-                                    >
-                                        Eliminar
-                                    </Button>
-
-                                </TableCell>
+                                <TableCell>Acciones</TableCell>
 
                             </TableRow>
 
-                        ))}
+                        </TableHead>
 
-                    </TableBody>
+                        <TableBody>
 
-                </Table>
+                            {comments.map(comment => (
 
-            </Paper>
+                                <TableRow
+                                    key={comment.id}
+                                >
+
+                                    <TableCell>
+                                        {comment.id}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {comment.postId}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {comment.name}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {comment.email}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {comment.body}
+                                    </TableCell>
+
+                                    <TableCell>
+
+                                        <Button
+                                            variant="contained"
+                                            color="warning"
+                                            size="small"
+                                            sx={{ mr: 1 }}
+                                            onClick={() =>
+                                                editComment(comment)
+                                            }
+                                        >
+                                            Editar
+                                        </Button>
+
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            size="small"
+                                            onClick={() =>
+                                                deleteComment(
+                                                    comment.id
+                                                )
+                                            }
+                                        >
+                                            Eliminar
+                                        </Button>
+
+                                    </TableCell>
+
+                                </TableRow>
+
+                            ))}
+
+                        </TableBody>
+
+                    </Table>
+
+                </Paper>
+
+            )}
 
             <Dialog
                 open={open}
@@ -433,6 +526,15 @@ function CommentsPage() {
                 </DialogActions>
 
             </Dialog>
+
+            <AppSnackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={() =>
+                    setSnackbarOpen(false)
+                }
+            />
 
         </Container>
 

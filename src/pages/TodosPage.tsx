@@ -16,17 +16,38 @@ import {
     DialogActions,
     TextField,
     Checkbox,
-    FormControlLabel
+    FormControlLabel,
+    CircularProgress,
+    Box
 } from "@mui/material";
 
 import api from "../api/api";
 
 import type { Todo } from "../features/todos/todoTypes";
 
+import {
+    fetchTodos
+} from "../features/todos/todosSlice";
+
+import {
+    useAppDispatch,
+    useAppSelector
+} from "../app/hooks";
+
 function TodosPage() {
 
-    const [todos, setTodos] =
-        useState<Todo[]>([]);
+    const dispatch =
+        useAppDispatch();
+
+    const todos =
+        useAppSelector(
+            state => state.todos.todos
+        );
+
+    const loading =
+        useAppSelector(
+            state => state.todos.loading
+        );
 
     const [open, setOpen] =
         useState(false);
@@ -48,26 +69,11 @@ function TodosPage() {
 
     useEffect(() => {
 
-        loadTodos();
+        dispatch(
+            fetchTodos()
+        );
 
-    }, []);
-
-    async function loadTodos() {
-
-        try {
-
-            const response =
-                await api.get("/todos");
-
-            setTodos(response.data);
-
-        } catch (error) {
-
-            console.error(error);
-
-        }
-
-    }
+    }, [dispatch]);
 
     async function saveTodo() {
 
@@ -83,7 +89,9 @@ function TodosPage() {
                 }
             );
 
-            await loadTodos();
+            await dispatch(
+                fetchTodos()
+            );
 
             closeDialog();
 
@@ -109,7 +117,9 @@ function TodosPage() {
                 }
             );
 
-            await loadTodos();
+            await dispatch(
+                fetchTodos()
+            );
 
             closeDialog();
 
@@ -142,7 +152,9 @@ function TodosPage() {
                 `/todos/${id}`
             );
 
-            await loadTodos();
+            await dispatch(
+                fetchTodos()
+            );
 
         } catch (error) {
 
@@ -229,92 +241,110 @@ function TodosPage() {
                 Nueva Tarea
             </Button>
 
-            <Paper>
+            {loading ? (
 
-                <Table>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mt: 4
+                    }}
+                >
 
-                    <TableHead>
+                    <CircularProgress />
 
-                        <TableRow>
+                </Box>
 
-                            <TableCell>ID</TableCell>
+            ) : (
 
-                            <TableCell>User ID</TableCell>
+                <Paper>
 
-                            <TableCell>Título</TableCell>
+                    <Table>
 
-                            <TableCell>Completada</TableCell>
+                        <TableHead>
 
-                            <TableCell>Acciones</TableCell>
+                            <TableRow>
 
-                        </TableRow>
+                                <TableCell>ID</TableCell>
 
-                    </TableHead>
+                                <TableCell>User ID</TableCell>
 
-                    <TableBody>
+                                <TableCell>Título</TableCell>
 
-                        {todos.map(todo => (
+                                <TableCell>Completada</TableCell>
 
-                            <TableRow
-                                key={todo.id}
-                            >
-
-                                <TableCell>
-                                    {todo.id}
-                                </TableCell>
-
-                                <TableCell>
-                                    {todo.userId}
-                                </TableCell>
-
-                                <TableCell>
-                                    {todo.title}
-                                </TableCell>
-
-                                <TableCell>
-                                    {todo.completed
-                                        ? "Sí"
-                                        : "No"}
-                                </TableCell>
-
-                                <TableCell>
-
-                                    <Button
-                                        variant="contained"
-                                        color="warning"
-                                        size="small"
-                                        sx={{ mr: 1 }}
-                                        onClick={() =>
-                                            editTodo(todo)
-                                        }
-                                    >
-                                        Editar
-                                    </Button>
-
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        size="small"
-                                        onClick={() =>
-                                            deleteTodo(
-                                                todo.id
-                                            )
-                                        }
-                                    >
-                                        Eliminar
-                                    </Button>
-
-                                </TableCell>
+                                <TableCell>Acciones</TableCell>
 
                             </TableRow>
 
-                        ))}
+                        </TableHead>
 
-                    </TableBody>
+                        <TableBody>
 
-                </Table>
+                            {todos.map(todo => (
 
-            </Paper>
+                                <TableRow
+                                    key={todo.id}
+                                >
+
+                                    <TableCell>
+                                        {todo.id}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {todo.userId}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {todo.title}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {todo.completed
+                                            ? "Sí"
+                                            : "No"}
+                                    </TableCell>
+
+                                    <TableCell>
+
+                                        <Button
+                                            variant="contained"
+                                            color="warning"
+                                            size="small"
+                                            sx={{ mr: 1 }}
+                                            onClick={() =>
+                                                editTodo(todo)
+                                            }
+                                        >
+                                            Editar
+                                        </Button>
+
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            size="small"
+                                            onClick={() =>
+                                                deleteTodo(
+                                                    todo.id
+                                                )
+                                            }
+                                        >
+                                            Eliminar
+                                        </Button>
+
+                                    </TableCell>
+
+                                </TableRow>
+
+                            ))}
+
+                        </TableBody>
+
+                    </Table>
+
+                </Paper>
+
+            )}
 
             <Dialog
                 open={open}
