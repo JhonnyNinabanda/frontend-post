@@ -70,6 +70,18 @@ function PhotosPage() {
     const [thumbnailUrl, setThumbnailUrl] =
         useState("");
 
+    const [albumIdError, setAlbumIdError] =
+        useState(false);
+
+    const [titleError, setTitleError] =
+        useState(false);
+
+    const [urlError, setUrlError] =
+        useState(false);
+
+    const [thumbnailUrlError, setThumbnailUrlError] =
+        useState(false);
+
     const [snackbarOpen, setSnackbarOpen] =
         useState(false);
 
@@ -101,6 +113,71 @@ function PhotosPage() {
 
     }
 
+    function validatePhoto() {
+
+        let valid = true;
+
+        setAlbumIdError(false);
+        setTitleError(false);
+        setUrlError(false);
+        setThumbnailUrlError(false);
+
+        if (!albumId.trim()) {
+
+            setAlbumIdError(true);
+
+            showSnackbar(
+                "El albumId es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!title.trim()) {
+
+            setTitleError(true);
+
+            showSnackbar(
+                "El título es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!url.trim()) {
+
+            setUrlError(true);
+
+            showSnackbar(
+                "La URL es obligatoria",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!thumbnailUrl.trim()) {
+
+            setThumbnailUrlError(true);
+
+            showSnackbar(
+                "La thumbnail URL es obligatoria",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        return valid;
+
+    }
+
     useEffect(() => {
 
         dispatch(
@@ -110,6 +187,10 @@ function PhotosPage() {
     }, [dispatch]);
 
     async function savePhoto() {
+
+        if (!validatePhoto()) {
+            return;
+        }
 
         try {
 
@@ -151,6 +232,10 @@ function PhotosPage() {
     async function updatePhoto() {
 
         try {
+
+            if (!validatePhoto()) {
+                return;
+            }
 
             await api.put(
                 `/photos/${id}`,
@@ -293,6 +378,14 @@ function PhotosPage() {
         setUrl("");
 
         setThumbnailUrl("");
+
+        setAlbumIdError(false);
+
+        setTitleError(false);
+
+        setUrlError(false);
+
+        setThumbnailUrlError(false);
 
     }
 
@@ -459,6 +552,12 @@ function PhotosPage() {
                         fullWidth
                         margin="dense"
                         value={albumId}
+                        error={albumIdError}
+                        helperText={
+                            albumIdError
+                                ? "Ingrese un albumId"
+                                : ""
+                        }
                         onChange={(e) =>
                             setAlbumId(
                                 e.target.value
@@ -471,6 +570,12 @@ function PhotosPage() {
                         fullWidth
                         margin="dense"
                         value={title}
+                        error={titleError}
+                        helperText={
+                            titleError
+                                ? "Ingrese un título"
+                                : ""
+                        }
                         onChange={(e) =>
                             setTitle(
                                 e.target.value
@@ -483,6 +588,12 @@ function PhotosPage() {
                         fullWidth
                         margin="dense"
                         value={url}
+                        error={urlError}
+                        helperText={
+                            urlError
+                                ? "Ingrese una URL"
+                                : ""
+                        }
                         onChange={(e) =>
                             setUrl(
                                 e.target.value
@@ -495,6 +606,12 @@ function PhotosPage() {
                         fullWidth
                         margin="dense"
                         value={thumbnailUrl}
+                        error={thumbnailUrlError}
+                        helperText={
+                            thumbnailUrlError
+                                ? "Ingrese una thumbnail URL"
+                                : ""
+                        }
                         onChange={(e) =>
                             setThumbnailUrl(
                                 e.target.value

@@ -64,6 +64,12 @@ function AlbumsPage() {
     const [title, setTitle] =
         useState("");
 
+    const [userIdError, setUserIdError] =
+        useState(false);
+
+    const [titleError, setTitleError] =
+        useState(false);
+
     const [snackbarOpen, setSnackbarOpen] =
         useState(false);
 
@@ -95,6 +101,44 @@ function AlbumsPage() {
 
     }
 
+    function validateAlbum() {
+
+        let valid = true;
+
+        setUserIdError(false);
+
+        setTitleError(false);
+
+        if (!userId.trim()) {
+
+            setUserIdError(true);
+
+            showSnackbar(
+                "El userId es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!title.trim()) {
+
+            setTitleError(true);
+
+            showSnackbar(
+                "El título es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        return valid;
+
+    }
+
     useEffect(() => {
 
         dispatch(
@@ -104,6 +148,10 @@ function AlbumsPage() {
     }, [dispatch]);
 
     async function saveAlbum() {
+
+        if (!validateAlbum()) {
+            return;
+        }
 
         try {
 
@@ -143,6 +191,10 @@ function AlbumsPage() {
     async function updateAlbum() {
 
         try {
+
+            if (!validateAlbum()) {
+                return;
+            }
 
             await api.put(
                 `/albums/${id}`,
@@ -267,6 +319,10 @@ function AlbumsPage() {
         setUserId("");
 
         setTitle("");
+
+        setUserIdError(false);
+
+        setTitleError(false);
 
     }
 
@@ -421,6 +477,12 @@ function AlbumsPage() {
                         fullWidth
                         margin="dense"
                         value={userId}
+                        error={userIdError}
+                        helperText={
+                            userIdError
+                                ? "Ingrese un userId"
+                                : ""
+                        }
                         onChange={(e) =>
                             setUserId(
                                 e.target.value
@@ -433,6 +495,12 @@ function AlbumsPage() {
                         fullWidth
                         margin="dense"
                         value={title}
+                        error={titleError}
+                        helperText={
+                            titleError
+                                ? "Ingrese un título"
+                                : ""
+                        }
                         onChange={(e) =>
                             setTitle(
                                 e.target.value

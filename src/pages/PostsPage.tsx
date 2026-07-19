@@ -32,6 +32,9 @@ import {
     useAppSelector
 } from "../app/hooks";
 
+import AppSnackbar
+    from "../components/AppSnackbar";
+
 function PostsPage() {
 
     const dispatch =
@@ -65,6 +68,29 @@ function PostsPage() {
     const [body, setBody] =
         useState("");
 
+    const [userIdError, setUserIdError] =
+        useState(false);
+
+    const [titleError, setTitleError] =
+        useState(false);
+
+    const [bodyError, setBodyError] =
+        useState(false);
+
+    const [snackbarOpen, setSnackbarOpen] =
+        useState(false);
+
+    const [snackbarMessage, setSnackbarMessage] =
+        useState("");
+
+    const [snackbarSeverity, setSnackbarSeverity] =
+        useState<
+            "success"
+            | "error"
+            | "warning"
+            | "info"
+        >("success");
+
     useEffect(() => {
 
         dispatch(
@@ -73,9 +99,83 @@ function PostsPage() {
 
     }, [dispatch]);
 
+    function showSnackbar(
+        message: string,
+        severity:
+            | "success"
+            | "error"
+            | "warning"
+            | "info"
+    ) {
+
+        setSnackbarMessage(message);
+
+        setSnackbarSeverity(severity);
+
+        setSnackbarOpen(true);
+
+    }
+
+    function validatePost() {
+
+        let valid = true;
+
+        setUserIdError(false);
+        setTitleError(false);
+        setBodyError(false);
+
+        if (!userId.trim()) {
+
+            setUserIdError(true);
+
+            showSnackbar(
+                "El userId es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!title.trim()) {
+
+            setTitleError(true);
+
+            showSnackbar(
+                "El título es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!body.trim()) {
+
+            setBodyError(true);
+
+            showSnackbar(
+                "El contenido es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        return valid;
+
+    }
+
     async function savePost() {
 
         try {
+
+            if (!validatePost()) {
+
+                return;
+
+            }
 
             await api.post(
                 "/posts",
@@ -91,9 +191,19 @@ function PostsPage() {
                 fetchPosts()
             );
 
+            showSnackbar(
+                "Post creado correctamente",
+                "success"
+            );
+
             closeDialog();
 
         } catch (error) {
+
+            showSnackbar(
+                "Error al crear post",
+                "error"
+            );
 
             console.error(error);
 
@@ -104,6 +214,12 @@ function PostsPage() {
     async function updatePost() {
 
         try {
+
+            if (!validatePost()) {
+
+                return;
+
+            }
 
             await api.put(
                 `/posts/${id}`,
@@ -119,9 +235,19 @@ function PostsPage() {
                 fetchPosts()
             );
 
+            showSnackbar(
+                "Post actualizado correctamente",
+                "success"
+            );
+
             closeDialog();
 
         } catch (error) {
+
+            showSnackbar(
+                "Error al actualizar post",
+                "error"
+            );
 
             console.error(error);
 
@@ -154,7 +280,17 @@ function PostsPage() {
                 fetchPosts()
             );
 
+            showSnackbar(
+                "Post eliminado correctamente",
+                "success"
+            );
+
         } catch (error) {
+
+            showSnackbar(
+                "Error al eliminar post",
+                "error"
+            );
 
             console.error(error);
 
@@ -217,6 +353,12 @@ function PostsPage() {
         setTitle("");
 
         setBody("");
+
+        setUserIdError(false);
+
+        setTitleError(false);
+
+        setBodyError(false);
 
     }
 
@@ -377,6 +519,12 @@ function PostsPage() {
                         fullWidth
                         margin="dense"
                         value={userId}
+                        error={userIdError}
+                        helperText={
+                            userIdError
+                                ? "Ingrese un userId"
+                                : ""
+                        }
                         onChange={(e) =>
                             setUserId(
                                 e.target.value
@@ -389,6 +537,12 @@ function PostsPage() {
                         fullWidth
                         margin="dense"
                         value={title}
+                        error={titleError}
+                        helperText={
+                            titleError
+                                ? "Ingrese un título"
+                                : ""
+                        }
                         onChange={(e) =>
                             setTitle(
                                 e.target.value
@@ -403,6 +557,12 @@ function PostsPage() {
                         rows={4}
                         margin="dense"
                         value={body}
+                        error={bodyError}
+                        helperText={
+                            bodyError
+                                ? "Ingrese contenido"
+                                : ""
+                        }
                         onChange={(e) =>
                             setBody(
                                 e.target.value
@@ -434,6 +594,15 @@ function PostsPage() {
                 </DialogActions>
 
             </Dialog>
+
+            <AppSnackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={() =>
+                    setSnackbarOpen(false)
+                }
+            />
 
         </Container>
 

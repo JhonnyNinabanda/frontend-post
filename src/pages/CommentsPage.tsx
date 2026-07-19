@@ -34,6 +34,7 @@ import {
 
 import AppSnackbar from "../components/AppSnackbar";
 
+
 function CommentsPage() {
 
     const dispatch =
@@ -70,6 +71,18 @@ function CommentsPage() {
     const [body, setBody] =
         useState("");
 
+    const [postIdError, setPostIdError] =
+        useState(false);
+
+    const [nameError, setNameError] =
+        useState(false);
+
+    const [emailError, setEmailError] =
+        useState(false);
+
+    const [bodyError, setBodyError] =
+        useState(false);
+
     const [snackbarOpen, setSnackbarOpen] =
         useState(false);
 
@@ -101,6 +114,90 @@ function CommentsPage() {
 
     }
 
+    function validateComment() {
+
+        let valid = true;
+
+        setPostIdError(false);
+        setNameError(false);
+        setEmailError(false);
+        setBodyError(false);
+
+        if (!postId.trim()) {
+
+            setPostIdError(true);
+
+            showSnackbar(
+                "El postId es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!name.trim()) {
+
+            setNameError(true);
+
+            showSnackbar(
+                "El nombre es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!email.trim()) {
+
+            setEmailError(true);
+
+            showSnackbar(
+                "El email es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        const emailRegex =
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (
+            email.trim() &&
+            !emailRegex.test(email)
+        ) {
+
+            setEmailError(true);
+
+            showSnackbar(
+                "Email inválido",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!body.trim()) {
+
+            setBodyError(true);
+
+            showSnackbar(
+                "El comentario es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        return valid;
+
+    }
+
     useEffect(() => {
 
         dispatch(
@@ -110,6 +207,10 @@ function CommentsPage() {
     }, [dispatch]);
 
     async function saveComment() {
+
+        if (!validateComment()){
+            return;
+        }
 
         try {
 
@@ -149,6 +250,10 @@ function CommentsPage() {
     }
 
     async function updateComment() {
+
+        if (!validateComment()){
+            return;
+        }
 
         try {
 
@@ -293,6 +398,14 @@ function CommentsPage() {
         setEmail("");
 
         setBody("");
+
+        setPostIdError(false);
+
+        setNameError(false);
+
+        setEmailError(false);
+
+        setBodyError(false);
 
     }
 
@@ -457,6 +570,12 @@ function CommentsPage() {
                         fullWidth
                         margin="dense"
                         value={postId}
+                        error={postIdError}
+                        helperText={
+                            postIdError
+                                ? "Ingrese un postId"
+                                : ""
+                        }
                         onChange={(e) =>
                             setPostId(
                                 e.target.value
@@ -469,6 +588,12 @@ function CommentsPage() {
                         fullWidth
                         margin="dense"
                         value={name}
+                        error={nameError}
+                        helperText={
+                            nameError
+                                ? "Ingrese un nombre"
+                                : ""
+                        }
                         onChange={(e) =>
                             setName(
                                 e.target.value
@@ -481,6 +606,12 @@ function CommentsPage() {
                         fullWidth
                         margin="dense"
                         value={email}
+                        error={emailError}
+                        helperText={
+                            emailError
+                                ? "Ingrese un email válido"
+                                : ""
+                        }
                         onChange={(e) =>
                             setEmail(
                                 e.target.value
@@ -495,6 +626,12 @@ function CommentsPage() {
                         rows={4}
                         margin="dense"
                         value={body}
+                        error={bodyError}
+                        helperText={
+                            bodyError
+                                ? "Ingrese un comentario"
+                                : ""
+                        }
                         onChange={(e) =>
                             setBody(
                                 e.target.value

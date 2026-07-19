@@ -196,7 +196,7 @@ function HomePage() {
                     mb: 4
                 }}
             >
-                Dashboard
+                Dashboard de Publicaciones
             </Typography>
 
             <Box

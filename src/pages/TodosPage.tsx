@@ -34,6 +34,8 @@ import {
     useAppSelector
 } from "../app/hooks";
 
+import AppSnackbar from "../components/AppSnackbar";
+
 function TodosPage() {
 
     const dispatch =
@@ -67,6 +69,26 @@ function TodosPage() {
     const [completed, setCompleted] =
         useState(false);
 
+    const [userIdError, setUserIdError] =
+        useState(false);
+
+    const [titleError, setTitleError] =
+        useState(false);
+
+    const [snackbarOpen, setSnackbarOpen] =
+        useState(false);
+
+    const [snackbarMessage, setSnackbarMessage] =
+        useState("");
+
+    const [snackbarSeverity, setSnackbarSeverity] =
+        useState<
+            "success"
+            | "error"
+            | "warning"
+            | "info"
+        >("success");
+
     useEffect(() => {
 
         dispatch(
@@ -75,9 +97,68 @@ function TodosPage() {
 
     }, [dispatch]);
 
+    function showSnackbar(
+        message: string,
+        severity:
+            | "success"
+            | "error"
+            | "warning"
+            | "info"
+    ) {
+
+        setSnackbarMessage(message);
+
+        setSnackbarSeverity(severity);
+
+        setSnackbarOpen(true);
+
+    }
+
+    function validateTodo() {
+
+        let valid = true;
+
+        setUserIdError(false);
+
+        setTitleError(false);
+
+        if (!userId.trim()) {
+
+            setUserIdError(true);
+
+            showSnackbar(
+                "El userId es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        if (!title.trim()) {
+
+            setTitleError(true);
+
+            showSnackbar(
+                "El título es obligatorio",
+                "warning"
+            );
+
+            valid = false;
+
+        }
+
+        return valid;
+
+    }
+
     async function saveTodo() {
 
         try {
+
+            if (!validateTodo()){
+                return;
+            }
 
             await api.post(
                 "/todos",
@@ -93,9 +174,19 @@ function TodosPage() {
                 fetchTodos()
             );
 
+            showSnackbar(
+                "Tarea creada correctamente",
+                "success"
+            );
+
             closeDialog();
 
         } catch (error) {
+
+            showSnackbar(
+                "Error al crear tarea",
+                "error"
+            );
 
             console.error(error);
 
@@ -106,6 +197,10 @@ function TodosPage() {
     async function updateTodo() {
 
         try {
+
+            if (!validateTodo()){
+                return;
+            }
 
             await api.put(
                 `/todos/${id}`,
@@ -121,9 +216,20 @@ function TodosPage() {
                 fetchTodos()
             );
 
+            showSnackbar(
+                "Tarea actualizada correctamente",
+                "success"
+            );
+
             closeDialog();
 
         } catch (error) {
+
+            showSnackbar(
+                "Error al actualizar tarea",
+                "error"
+            );
+
 
             console.error(error);
 
@@ -156,7 +262,17 @@ function TodosPage() {
                 fetchTodos()
             );
 
+            showSnackbar(
+                "Tarea eliminada correctamente",
+                "success"
+            );
+
         } catch (error) {
+
+            showSnackbar(
+                "Error al eliminar tarea",
+                "error"
+            );
 
             console.error(error);
 
@@ -219,6 +335,10 @@ function TodosPage() {
         setTitle("");
 
         setCompleted(false);
+
+        setUserIdError(false);
+
+        setTitleError(false);
 
     }
 
@@ -381,6 +501,12 @@ function TodosPage() {
                         fullWidth
                         margin="dense"
                         value={userId}
+                        error={userIdError}
+                        helperText={
+                            userIdError
+                                ? "Ingrese un userId"
+                                : ""
+                        }
                         onChange={(e) =>
                             setUserId(
                                 e.target.value
@@ -393,6 +519,12 @@ function TodosPage() {
                         fullWidth
                         margin="dense"
                         value={title}
+                        error={titleError}
+                        helperText={
+                            titleError
+                                ? "Ingrese un título"
+                                : ""
+                        }
                         onChange={(e) =>
                             setTitle(
                                 e.target.value
@@ -438,6 +570,15 @@ function TodosPage() {
                 </DialogActions>
 
             </Dialog>
+
+            <AppSnackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={() =>
+                    setSnackbarOpen(false)
+                }
+            />
 
         </Container>
 
